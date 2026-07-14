@@ -5,40 +5,40 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 
-from boom_api.models import Profiles 
-from boom_api.serializers import ProfilesSerializer  
+from boom_api.models import Profiles
+
+ROLES_ATTR = ["padre", "docente", "terapeuta", "administrador"]
+
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        
-        if user.is_active:
-            role_names = [role.name for role in user.groups.all()]
 
-            profile = Profiles.objects.filter(user=user).first()
-            if not profile:
-                return Response({"detail": "Perfil no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        if not user.is_active:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
 
-            token, created = Token.objects.get_or_create(user=user)
+        role_names = [rol for rol in ROLES_ATTR if hasattr(user, rol)]
 
-            return Response({
-                'id': user.pk,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'email': user.email,
-                'token': token.key,
-                'roles': role_names
-            })
-        return Response({}, status=status.HTTP_403_FORBIDDEN)
+        # Invalida cualquier token anterior (otros dispositivos) y crea uno nuevo
+        Token.objects.filter(user=user).delete()
+        token = Token.objects.create(user=user)
+
+        return Response({
+            'id': user.pk,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'token': token.key,
+            'roles': role_names
+        })
+
 
 class Logout(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        if user.is_active:
-            Token.objects.filter(user=user).delete()
-            return Response({'logout': True})
-        return Response({'logout': False})
+    def post(self, request, *args, **kwargs):
+        Token.objects.filter(user=request.user).delete()
+        return Response({'logout': True})
+    
