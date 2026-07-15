@@ -30,3 +30,12 @@ Sigue estos pasos para clonar y levantar el entorno de desarrollo en tu máquina
 ### 1. Clonar el proyecto y entrar al directorio
 ```bash
 cd ~/Desktop/bacckendBoom
+
+### url para el chequeo de las apis 
+http://127.0.0.1:8000/api/docs/swagger/
+
+
+
+#### 1. Crear un admin raiz 
+curl -X POST http://127.0.0.1:8000/api/login/      -H "Content-Type: application/json"      -d '{"username": "admin@correo.com", "password": "tu_password_aqui"}'
+
