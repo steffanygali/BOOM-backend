@@ -33,7 +33,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',     
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -77,7 +77,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'boom_db',          # crear base de datos :createdb boom_db
         'USER': 'isaac',            # nombre de usuario modificasrlo
-        'PASSWORD': '',             
+        'PASSWORD':'toor',
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
@@ -120,7 +120,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
-    'DEFAULT_THROTTLE_CLASSES': [ # configuraciones de peticiones esto se puede borrar o cambiar 
+    'DEFAULT_THROTTLE_CLASSES': [ # configuraciones de peticiones esto se puede borrar o cambiar
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
     ],
