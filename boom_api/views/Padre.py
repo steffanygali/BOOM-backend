@@ -12,6 +12,8 @@ from rest_framework.response import Response
 from django.contrib.auth.models import Group
 from drf_spectacular.utils import extend_schema
 from boom_api.serializers_docs import RegistroPadreInputSerializer
+
+
 class PadreViews(generics.CreateAPIView):
 
     permission_classes = (permissions.AllowAny,)
@@ -39,7 +41,7 @@ class PadreViews(generics.CreateAPIView):
             if not password:
                 return Response({"message": "La contraseña es requerida"}, status=400)
 
-            # prueva si es que existe las url de si es que existe 
+            # prueva si es que existe las url de si es que existe
             existing_user = User.objects.filter(email=email).first()
 
             if existing_user:
@@ -55,7 +57,7 @@ class PadreViews(generics.CreateAPIView):
             user.set_password(password)
             user.save()
 
-            #Alamacenar los demas datos del padre 
+            #Alamacenar los demas datos del padre
             padre = Padre.objects.create(
                 user=user,
                 fecha_nacimiento=request.data['fecha_nacimiento'],

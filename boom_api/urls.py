@@ -8,6 +8,7 @@ from boom_api.views.Admin import *
 from boom_api.views.Docente import *
 from boom_api.views.Padre import *
 from boom_api.views.Terapeuta import *
+from boom_api.views.actividades import *
 
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -21,12 +22,15 @@ urlpatterns = [
     path("api/version/", VersionView.as_view()),
     path('api/login/', CustomAuthToken.as_view()),
     path('api/logout/', Logout.as_view()),
-    
-    #apis para los registros 
+
+    #apis para los registros
     path("api/register/administrador/", AdminViews.as_view()),
     path("api/register/docente/",DocenteViews.as_view()),
     path("api/register/padre/", PadreViews.as_view()),
     path("api/register/terapeuta/", TerapeutaViews.as_view()),
+    path('actividades/', ActividadListView.as_view()),
+    path('actividades/crear/', ActividadViewSet.as_view()),
+    path('actividades/<int:pk>/', ActividadDetailView.as_view()),
 
 
     #endpoints de documentacion
@@ -34,10 +38,10 @@ urlpatterns = [
     # ====== ENDPOINTS DE LA DOCUMENTACIÓN ======
     # Genera el archivo plano de configuración (OpenAPI Schema)
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    
-    # Interfaz Interactiva Web (Swagger UI) 
+
+    # Interfaz Interactiva Web (Swagger UI)
     path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    
+
     # Interfaz Técnica limpia alternativa (Redoc)
     path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]

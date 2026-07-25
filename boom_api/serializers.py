@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import *
 
-#Serealizaciones de nuestras app 
+#Serealizaciones de nuestras app
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,10 +34,11 @@ class TerapeutaSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class NinoSerializer(serializers.ModelSerializer):
+    pin_acceso = serializers.CharField(write_only=True, required=False, min_length=4, max_length=12)
     class Meta:
         model = Nino
         fields = [
-            "id", "nickname", "fecha_nacimiento", "padre", "docente", "terapeuta",
+            "id", "nickname", "fecha_nacimiento", "docente", "terapeuta",
             "nivel_apoyo", "avatar", "consentimiento_padre", "activo",
             "creation", "update",
         ]
@@ -58,3 +59,11 @@ class AdministradoresSerializer(serializers.ModelSerializer):
     class Meta:
         model = Administradores
         fields = "__all__"
+
+class ActividadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Actividad
+        fields = [
+            "id", "titulo", "tipo", "nivel_dificultad",
+            "instrucciones", "audio", "imagen", "activo",
+        ]

@@ -29,7 +29,12 @@ class EsDocenteOTerapeuta(BasePermission):
         user = request.user
         return user.is_authenticated and (hasattr(user, "docente") or hasattr(user, "terapeuta"))
 
-
+class EsDocenteOTerapeutaOAdmin(BasePermission):
+    def has_permission(self, request, view):
+        u = request.user
+        return u.is_authenticated and (
+            hasattr(u, 'docente') or hasattr(u, 'terapeuta') or hasattr(u, 'administrador')
+        )
 class EsAdministrador(BasePermission):
     message = "Solo un administrador puede realizar esta acción."
 

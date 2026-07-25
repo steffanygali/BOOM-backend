@@ -62,13 +62,13 @@ class Docente(models.Model):
 class Terapeuta(models.Model):
     id_terapeuta = models.BigAutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="terapeuta")
-    
+
     # Datos Personales
     fecha_nacimiento = models.DateField()
     telefono = models.CharField(max_length=20, blank=True, null=True)
     direccion = models.CharField(max_length=255, blank=True, null=True)
     foto_perfil = models.ImageField(upload_to='terapeutas/fotos/', blank=True, null=True)
-    
+
     # Identificación Oficial y Fiscal (México)
     curp = models.CharField(max_length=18, null=True, blank=True, unique=True)
     rfc = models.CharField(max_length=13, null=True, blank=True) # Limitado a 13 caracteres para México
@@ -80,7 +80,7 @@ class Terapeuta(models.Model):
     institucion_egreso = models.CharField(max_length=150, blank=True, null=True)
     cedula_profesional = models.CharField(max_length=20, blank=True, null=True)
     biografia = models.TextField(blank=True, null=True)
-    modalidad = models.CharField(max_length=50, blank=True, null=True) 
+    modalidad = models.CharField(max_length=50, blank=True, null=True)
     idiomas = models.CharField(max_length=100, default="Español")
     estatus = models.CharField(max_length=50, default="Pendiente")
     fecha_registro = models.DateTimeField(auto_now_add=True)
@@ -158,3 +158,18 @@ class Administradores(models.Model):
 def create_profile(sender, instance, created, **kwargs):
     if created:
         Profiles.objects.create(user=instance)
+
+class Actividad(models.Model):
+    TIPO_CHOICES = [
+        ('lectoescritura', 'Lectoescritura'),
+        ('matematicas', 'Matemáticas'),
+        ('habilidades_sociales', 'Habilidades sociales'),
+        ('vida_diaria', 'Vida diaria'),
+    ]
+    titulo = models.CharField(max_length=150)
+    tipo = models.CharField(max_length=30, choices=TIPO_CHOICES)
+    nivel_dificultad = models.PositiveSmallIntegerField()
+    instrucciones = models.TextField()
+    audio = models.FileField(upload_to='actividades/audio/', blank=True, null=True)
+    imagen = models.ImageField(upload_to='actividades/imagenes/', blank=True, null=True)
+    activo = models.BooleanField(default=True)
