@@ -173,3 +173,42 @@ class Actividad(models.Model):
     audio = models.FileField(upload_to='actividades/audio/', blank=True, null=True)
     imagen = models.ImageField(upload_to='actividades/imagenes/', blank=True, null=True)
     activo = models.BooleanField(default=True)
+
+
+
+
+class PreguntaEvaluacion(models.Model):
+    TIPO_CHOICES = [
+        ('lectura', 'Lectura'),
+        ('atencion', 'Atención'),
+        ('motora', 'Habilidades motoras'),
+    ]
+    texto = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    activo = models.BooleanField(default=True)
+
+
+class OpcionRespuesta(models.Model):
+    pregunta = models.ForeignKey(PreguntaEvaluacion, related_name='opciones', on_delete=models.CASCADE)
+    opcion = models.CharField(max_length=255)
+    valor = models.IntegerField()  # peso/puntaje que luego usará el algoritmo
+
+
+class EvaluacionInicial(models.Model):
+    nino = models.ForeignKey(Nino, related_name='evaluaciones', on_delete=models.CASCADE)
+    padre= models.ForeignKey(Padre, related_name='evaluaciones', on_delete=models.CASCADE) # el padre puede ver tambine las evaluaciones del nino
+    fecha_inicio = models.DateTimeField(auto_now_add=True)
+    fecha_fin = models.DateTimeField(null=True, blank=True)
+    completada = models.BooleanField(default=False)
+
+
+class RespuestaNino(models.Model):
+    evaluacion = models.ForeignKey(EvaluacionInicial, related_name='respuestas', on_delete=models.CASCADE)
+    pregunta = models.ForeignKey(PreguntaEvaluacion, on_delete=models.CASCADE)
+    opcion_elegida = models.ForeignKey(OpcionRespuesta, on_delete=models.CASCADE)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['evaluacion', 'pregunta'], name='una_respuesta_por_pregunta')
+        ]

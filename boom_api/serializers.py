@@ -63,7 +63,28 @@ class AdministradoresSerializer(serializers.ModelSerializer):
 class ActividadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Actividad
-        fields = [
-            "id", "titulo", "tipo", "nivel_dificultad",
-            "instrucciones", "audio", "imagen", "activo",
-        ]
+        fields = ["id", "titulo", "tipo", "nivel_dificultad","instrucciones", "audio", "imagen", "activo" ]
+
+class OpcionRespuestaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OpcionRespuesta
+        fields = ["id", "opcion"] # el puntaje no se revela
+
+class PreguntaEvaluacionSerializer(serializers.ModelSerializer):
+    opciones = OpcionRespuestaSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = PreguntaEvaluacion
+        fields = ["id", "texto", "tipo", "opciones"]
+
+class RespuestaNinoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RespuestaNino
+        fields = ["id", "pregunta", "opcion_elegida"]
+
+class EvaluacionInicialSerializer(serializers.ModelSerializer):
+    respuestas = RespuestaNinoSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = EvaluacionInicial
+        fields = ["id", "nino","padre", "fecha_inicio", "fecha_fin", "completada", "respuestas"]

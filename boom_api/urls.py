@@ -8,7 +8,8 @@ from boom_api.views.Admin import *
 from boom_api.views.Docente import *
 from boom_api.views.Padre import *
 from boom_api.views.Terapeuta import *
-from boom_api.views.actividades import *
+from boom_api.views.Actividades import *
+from boom_api.views.Preguntas import *
 
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -28,9 +29,17 @@ urlpatterns = [
     path("api/register/docente/",DocenteViews.as_view()),
     path("api/register/padre/", PadreViews.as_view()),
     path("api/register/terapeuta/", TerapeutaViews.as_view()),
+
+    #apis para el registro de actividades
     path('actividades/', ActividadListView.as_view()),
     path('actividades/crear/', ActividadViewSet.as_view()),
     path('actividades/<int:pk>/', ActividadDetailView.as_view()),
+
+    #preguntas para nuestro evaluar
+    path('evaluacion/preguntas/', PreguntaEvaluacionListView.as_view()),
+    path('evaluacion/iniciar/', EvaluacionInicialCreateView.as_view()),
+    path('evaluacion/<int:evaluacion_id>/responder/', RespuestaNinoCreateView.as_view()),
+    path('evaluacion/<int:pk>/finalizar/', EvaluacionInicialFinalizarView.as_view()),
 
 
     #endpoints de documentacion

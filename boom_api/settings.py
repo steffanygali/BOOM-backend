@@ -77,7 +77,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'boom_db',          # crear base de datos :createdb boom_db
         'USER': 'isaac',            # nombre de usuario modificasrlo
-        'PASSWORD':'', #toor
+        'PASSWORD':'toor', #toor
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
