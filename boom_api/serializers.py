@@ -45,7 +45,7 @@ class NinoSerializer(serializers.ModelSerializer):
 
 
 class NinoCreateSerializer(serializers.ModelSerializer):
-    pin_acceso = serializers.CharField(write_only=True, min_length=4, max_length=12)
+    pin_acceso = serializers.CharField(write_only=True, required=False, min_length=4, max_length=12)
 
     class Meta:
         model = Nino
@@ -53,6 +53,7 @@ class NinoCreateSerializer(serializers.ModelSerializer):
             "id", "nickname", "fecha_nacimiento", "padre", "docente", "terapeuta",
             "nivel_apoyo", "avatar", "consentimiento_padre", "pin_acceso",
         ]
+        read_only_fields = ["padre"]
 
 class AdministradoresSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

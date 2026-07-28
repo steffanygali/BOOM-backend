@@ -23,6 +23,16 @@ class NinoCreateView(generics.CreateAPIView):
     serializer_class = NinoCreateSerializer
     permission_classes = (permissions.IsAuthenticated, EsPadre)
 
+    @extend_schema(
+        summary="Registrar un niño (para padre de familia)",
+        description="Endpoint para que un padre autenticado registre un nuevo niño/a. Si no se envía pin_acceso, se genera uno de 6 dígitos automáticamente.",
+        tags=["Niño"],
+        responses={
+            201: dict(description="Niño registrado exitosamente", example={"id": 1, "nickname": "Carlitos", "fecha_nacimiento": "2018-05-10", "pin_generado": "123456"}),
+            400: dict(description="Error de validación o nickname duplicado"),
+            403: dict(description="Solo un padre/tutor puede registrar niños")
+        }
+    )
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
