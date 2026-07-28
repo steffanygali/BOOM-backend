@@ -89,3 +89,4 @@ class EvaluacionInicialSerializer(serializers.ModelSerializer):
     class Meta:
         model = EvaluacionInicial
         fields = ["id", "nino","padre", "fecha_inicio", "fecha_fin", "completada", "respuestas"]
+        read_only_fields = ["nino", "padre"]

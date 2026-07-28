@@ -1,4 +1,5 @@
 from django.db.models import *
+from django.utils import timezone
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -20,8 +21,9 @@ class EvaluacionInicialCreateView(generics.CreateAPIView):
     permission_classes = (permissions.IsAuthenticated, EsPadre)
 
     def perform_create(self, serializer):
+        nino_id = self.request.data.get('nino_id') or self.request.data.get('nino')
         nino = get_object_or_404(
-            Nino, pk=self.request.data.get('nino_id'), padre__user=self.request.user
+            Nino, pk=nino_id, padre__user=self.request.user
         )
         serializer.save(nino=nino, padre=self.request.user.padre)
 
