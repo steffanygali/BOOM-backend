@@ -10,6 +10,7 @@ from boom_api.views.Padre import *
 from boom_api.views.Terapeuta import *
 from boom_api.views.Actividades import *
 from boom_api.views.Preguntas import *
+from boom_api.views.SessionEvents import *
 
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -36,10 +37,15 @@ urlpatterns = [
     path('actividades/<int:pk>/', ActividadDetailView.as_view()),
 
     #preguntas para nuestro evaluar
-    path('evaluacion/preguntas/', PreguntaEvaluacionListView.as_view()),
     path('evaluacion/iniciar/', EvaluacionInicialCreateView.as_view()),
     path('evaluacion/<int:evaluacion_id>/responder/', RespuestaNinoCreateView.as_view()),
     path('evaluacion/<int:pk>/finalizar/', EvaluacionInicialFinalizarView.as_view()),
+
+    #generar eventos de seccion para niño
+
+    path('sesion/iniciar/', SesionIniciarView.as_view()),
+    path('sesion/<int:sesion_id>/registrar/', RegistroActividadCreateView.as_view()),
+    path('sesion/<int:pk>/finalizar/', SesionFinalizarView.as_view()),
 
 
     #endpoints de documentacion

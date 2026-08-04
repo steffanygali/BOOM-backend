@@ -1,19 +1,11 @@
-from django.db.models import *
+from django.utils import timezone
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from boom_api.models import *
-from boom_api.permissions import *
-from boom_api.serializers import *
+from boom_api.models import EvaluacionInicial, RespuestaNino, Nino, PerfilCognitivo
+from boom_api.permissions import EsPadre
+from boom_api.serializers import EvaluacionInicialSerializer, RespuestaNinoSerializer
 
-
-# get para obtener preguntas
-class PreguntaEvaluacionListView(generics.ListAPIView):
-    queryset = PreguntaEvaluacion.objects.filter(activo=True)
-    serializer_class =  PreguntaEvaluacionSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
-# para crear solo actua como un post
 
 class EvaluacionInicialCreateView(generics.CreateAPIView):
     serializer_class = EvaluacionInicialSerializer
@@ -24,6 +16,7 @@ class EvaluacionInicialCreateView(generics.CreateAPIView):
             Nino, pk=self.request.data.get('nino_id'), padre__user=self.request.user
         )
         serializer.save(nino=nino, padre=self.request.user.padre)
+
 
 class RespuestaNinoCreateView(generics.CreateAPIView):
     serializer_class = RespuestaNinoSerializer
@@ -38,7 +31,6 @@ class RespuestaNinoCreateView(generics.CreateAPIView):
         )
         serializer.save(evaluacion=evaluacion)
 
-#un update sencillito
 
 class EvaluacionInicialFinalizarView(generics.UpdateAPIView):
     queryset = EvaluacionInicial.objects.all()
@@ -53,4 +45,32 @@ class EvaluacionInicialFinalizarView(generics.UpdateAPIView):
         evaluacion.completada = True
         evaluacion.fecha_fin = timezone.now()
         evaluacion.save()
+
+        perfil_cognitivo_sencillo = self.generar_perfil_cognitivo(evaluacion)
+
+        PerfilCognitivo.objects.update_or_create(
+            nino=evaluacion.nino,
+            defaults={'resultado': perfil_cognitivo_sencillo}
+        )
+
         return Response(self.get_serializer(evaluacion).data)
+
+    #este perfil cognitivo es temporal faltara pulirse con datos historicos o con un profesional 
+    def generar_perfil_cognitivo(self, evaluacion):
+        respuestas = evaluacion.respuestas.all()
+
+        puntajes = {}
+        for r in respuestas:
+            puntajes.setdefault(r.tipo, []).append(r.valor)
+
+        resultado = {}
+        for tipo, valores in puntajes.items():
+            promedio = sum(valores) / len(valores)
+            if promedio >= 7:
+                nivel = "bajo apoyo"
+            elif promedio >= 4:
+                nivel = "apoyo moderado"
+            else:
+                nivel = "apoyo alto"
+            resultado[tipo] = {"promedio": promedio, "nivel": nivel}
+        return resultado

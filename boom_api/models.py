@@ -1,9 +1,11 @@
+import hashlib
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.authentication import TokenAuthentication
 from django.contrib.auth.models import AbstractUser, User
+from django_cryptography.fields import encrypt
 from django.conf import settings
 
 
@@ -25,8 +27,8 @@ class Padre(models.Model):
     id = models.BigAutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="padre")
     fecha_nacimiento = models.DateField()
-    telefono = models.CharField(max_length=20, blank=True, null=True)
-    direccion = models.CharField(max_length=255, blank=True, null=True)
+    telefono = encrypt(models.CharField(max_length=20, blank=True, null=True))
+    direccion = encrypt(models.CharField(max_length=255, blank=True, null=True))
     creation = models.DateTimeField(auto_now_add=True)
     update = models.DateTimeField(auto_now=True, null=True, blank=True)
 
@@ -42,10 +44,11 @@ class Docente(models.Model):
     id_docente = models.BigAutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="docente")
     fecha_nacimiento = models.DateField()
-    telefono = models.CharField(max_length=20, blank=True, null=True)
-    direccion = models.CharField(max_length=255, blank=True, null=True)
-    curp = models.CharField(max_length=18, null=True, blank=True, unique=True)
-    rfc = models.CharField(max_length=13, null=True, blank=True)
+    telefono = encrypt(models.CharField(max_length=20, blank=True, null=True))
+    direccion = encrypt(models.CharField(max_length=255, blank=True, null=True))
+    curp = encrypt(models.CharField(max_length=18, null=True, blank=True))
+    curp_hash = models.CharField(max_length=64, unique=True, null=True, blank=True, editable=False)
+    rfc = encrypt(models.CharField(max_length=13, null=True, blank=True))
     campus = models.CharField(max_length=100)
     activo = models.BooleanField(default=True)
     AreaEspecializada = models.CharField(max_length=100)
@@ -59,19 +62,26 @@ class Docente(models.Model):
     def __str__(self):
         return f"Docente:  {self.user.first_name} {self.user.last_name}"
 
+    def save(self, *args, **kwargs):
+        if self.curp:
+            self.curp_hash = hashlib.sha256(self.curp.encode()).hexdigest()
+        super().save(*args, **kwargs)
+
+
 class Terapeuta(models.Model):
     id_terapeuta = models.BigAutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="terapeuta")
 
     # Datos Personales
     fecha_nacimiento = models.DateField()
-    telefono = models.CharField(max_length=20, blank=True, null=True)
-    direccion = models.CharField(max_length=255, blank=True, null=True)
+    telefono = encrypt(models.CharField(max_length=20, blank=True, null=True))
+    direccion = encrypt(models.CharField(max_length=255, blank=True, null=True))
     foto_perfil = models.ImageField(upload_to='terapeutas/fotos/', blank=True, null=True)
 
     # Identificación Oficial y Fiscal (México)
-    curp = models.CharField(max_length=18, null=True, blank=True, unique=True)
-    rfc = models.CharField(max_length=13, null=True, blank=True) # Limitado a 13 caracteres para México
+    curp = encrypt(models.CharField(max_length=18, null=True, blank=True))
+    curp_hash = models.CharField(max_length=64, unique=True, null=True, blank=True, editable=False)
+    rfc = encrypt(models.CharField(max_length=13, null=True, blank=True))
     regimen_fiscal = models.CharField(max_length=100, blank=True, null=True)
 
     # Datos Profesionales
@@ -92,11 +102,17 @@ class Terapeuta(models.Model):
     def __str__(self):
         return f"Terapeuta: {self.user.get_full_name()}"
 
+    def save(self, *args, **kwargs):
+        if self.curp:
+            self.curp_hash = hashlib.sha256(self.curp.encode()).hexdigest()
+        super().save(*args, **kwargs)
+
+
 class Nino(models.Model):
     id = models.BigAutoField(primary_key=True)
     nickname = models.CharField(max_length=50, unique=True)
     fecha_nacimiento = models.DateField()
-    pin_acceso = models.CharField(max_length=128)  # se guarda hasheado, ver save()
+    pin_acceso = models.CharField(max_length=128)  # ya va hasheado (PBKDF2), no cifrado — no hace falta encrypt()
 
     padre = models.ForeignKey(
         Padre, on_delete=models.CASCADE, related_name="ninos"
@@ -104,9 +120,8 @@ class Nino(models.Model):
     docente = models.ForeignKey(
         Docente, on_delete=models.SET_NULL, null=True, blank=True, related_name="alumnos"
     )
-
     terapeuta = models.ForeignKey(
-        Terapeuta,on_delete=models.SET_NULL,null=True,blank=True, related_name="paciente"
+        Terapeuta, on_delete=models.SET_NULL, null=True, blank=True, related_name="paciente"
     )
 
     nivel_apoyo = models.CharField(max_length=100, blank=True, null=True)
@@ -139,25 +154,28 @@ class Nino(models.Model):
             self.pin_acceso = make_password(self.pin_acceso)
         super().save(*args, **kwargs)
 
+
 class Administradores(models.Model):
     id = models.BigAutoField(primary_key=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE,related_name="administrador")
-    clave_admin = models.CharField(max_length=255,null=True, blank=True)
-    telefono = models.CharField(max_length=255, null=True, blank=True)
-    rfc = models.CharField(max_length=255,null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="administrador")
+    clave_admin = encrypt(models.CharField(max_length=255, null=True, blank=True))
+    telefono = encrypt(models.CharField(max_length=255, null=True, blank=True))
+    rfc = encrypt(models.CharField(max_length=255, null=True, blank=True))
     fecha_nacimiento = models.DateField()
-    GradoAcademico = models.CharField(max_length=255,null=True, blank=True)
+    GradoAcademico = models.CharField(max_length=255, null=True, blank=True)
     creation = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     update = models.DateTimeField(null=True, blank=True)
     activo = models.BooleanField(default=True)
 
     def __str__(self):
-        return "Perfil del admin "+self.user.first_name+" "+self.user.last_name
+        return "Perfil del admin " + self.user.first_name + " " + self.user.last_name
+
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
         Profiles.objects.create(user=instance)
+
 
 class Actividad(models.Model):
     TIPO_CHOICES = [
@@ -175,40 +193,45 @@ class Actividad(models.Model):
     activo = models.BooleanField(default=True)
 
 
-
-
-class PreguntaEvaluacion(models.Model):
-    TIPO_CHOICES = [
-        ('lectura', 'Lectura'),
-        ('atencion', 'Atención'),
-        ('motora', 'Habilidades motoras'),
-    ]
-    texto = models.CharField(max_length=255)
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
-    activo = models.BooleanField(default=True)
-
-
-class OpcionRespuesta(models.Model):
-    pregunta = models.ForeignKey(PreguntaEvaluacion, related_name='opciones', on_delete=models.CASCADE)
-    opcion = models.CharField(max_length=255)
-    valor = models.IntegerField()  # peso/puntaje que luego usará el algoritmo
-
-
 class EvaluacionInicial(models.Model):
     nino = models.ForeignKey(Nino, related_name='evaluaciones', on_delete=models.CASCADE)
-    padre= models.ForeignKey(Padre, related_name='evaluaciones', on_delete=models.CASCADE) # el padre puede ver tambine las evaluaciones del nino
+    padre = models.ForeignKey(Padre, related_name='evaluaciones', on_delete=models.CASCADE)
     fecha_inicio = models.DateTimeField(auto_now_add=True)
     fecha_fin = models.DateTimeField(null=True, blank=True)
     completada = models.BooleanField(default=False)
 
 
 class RespuestaNino(models.Model):
+    TIPO_CHOICES = [
+        ('lectura', 'Lectura'),
+        ('atencion', 'Atención'),
+        ('motora', 'Habilidades motoras'),
+    ]
     evaluacion = models.ForeignKey(EvaluacionInicial, related_name='respuestas', on_delete=models.CASCADE)
-    pregunta = models.ForeignKey(PreguntaEvaluacion, on_delete=models.CASCADE)
-    opcion_elegida = models.ForeignKey(OpcionRespuesta, on_delete=models.CASCADE)
+    pregunta_texto = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    valor = models.IntegerField()
     fecha = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['evaluacion', 'pregunta'], name='una_respuesta_por_pregunta')
-        ]
+
+class PerfilCognitivo(models.Model):
+    nino = models.OneToOneField(Nino, on_delete=models.CASCADE, related_name='perfil_cognitivo')
+    resultado = models.JSONField()
+    generado_en = models.DateTimeField(auto_now=True)
+
+
+class SesionNino(models.Model):
+    nino = models.ForeignKey(Nino, related_name='sesiones', on_delete=models.CASCADE)
+    padre = models.ForeignKey(Padre, related_name='sesiones_registradas', on_delete=models.CASCADE)
+    inicio = models.DateTimeField(auto_now_add=True)
+    fin = models.DateTimeField(null=True, blank=True)
+    actividades_completadas = models.PositiveIntegerField(default=0)
+    tiempo_total_segundos = models.PositiveIntegerField(default=0)
+
+
+class RegistroActividad(models.Model):
+    sesion = models.ForeignKey(SesionNino, related_name='registros', on_delete=models.CASCADE)
+    actividad = models.ForeignKey(Actividad, on_delete=models.SET_NULL, null=True, blank=True)
+    tiempo_segundos = models.PositiveIntegerField()
+    completada = models.BooleanField(default=True)
+    fecha = models.DateTimeField(auto_now_add=True)
